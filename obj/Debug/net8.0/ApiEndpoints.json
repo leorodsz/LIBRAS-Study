@@ -1,0 +1,60 @@
+[
+  {
+    "ContainingType": "CADASTRO_API.Controllers.CadastroController",
+    "Method": "EfetuarCadastro",
+    "RelativePath": "Cadastro/Cadastro",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "cadastro",
+        "Type": "CADASTRO_API.Cadastro",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Boolean",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CADASTRO_API.Controllers.CadastroController",
+    "Method": "GetUser",
+    "RelativePath": "Cadastro/GetUser",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "email",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "CADASTRO_API.Controllers.CadastroController",
+    "Method": "EfetuarLogin",
+    "RelativePath": "Cadastro/Login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "login",
+        "Type": "CADASTRO_API.Login",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
