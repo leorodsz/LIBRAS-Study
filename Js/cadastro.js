@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const response = await fetch('https://localhost:7072/Cadastro/Cadastro', {
+      const response = await fetch('API AQUI', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
