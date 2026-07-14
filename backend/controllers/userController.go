@@ -31,7 +31,7 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 	defer db.Close()
 
 	query := `
-		INSERT INTO users (name, email, password)
+		INSERT INTO users (nome, email, senha)
 		VALUES (?, ?, ?)
 		`
 	_, err = db.Exec(
@@ -73,7 +73,7 @@ func GetUser(write http.ResponseWriter, request *http.Request) {
 	defer db.Close()
 
 	query := `
-		SELECT id, name, email, password
+		SELECT id, nome, email, senha
 		FROM users
 		WHERE email = ?
 	`
@@ -114,7 +114,7 @@ func UpdateUser(write http.ResponseWriter, request *http.Request) {
 
 	query := `
 	UPDATE users
-	SET name = ?, email = ?, password = ?
+	SET nome = ?, email = ?, senha = ?
 	WHERE id = ?
 	`
 	_, err = db.Exec(
