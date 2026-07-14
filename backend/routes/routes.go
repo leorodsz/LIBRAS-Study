@@ -5,7 +5,6 @@ import (
 	"libras_study/controllers"
 	"net/http"
 )
-
 func SetupRoutes() {
 	http.HandleFunc("/", func(write http.ResponseWriter, request *http.Request) {
 		fmt.Fprintf(write, "Bem-vindo ao servidor LibrasStudy!")
