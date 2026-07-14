@@ -30,6 +30,26 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 	var db = config.ConnectDB()
 	defer db.Close()
 
+	query := `
+		INSERT INTO users (name, email, password)
+		VALUES (?, ?, ?)
+		`
+	_, err = db.Exec(
+		query,
+		user.Nome,
+		user.Email,
+		user.Password,
+	)
+
+	if err != nil {
+		http.Error(write, "Erro ao criar usuário: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	write.WriteHeader(http.StatusCreated)
+
+	json.NewEncoder(write).Encode(map[string]string{
+		"message": "Usuário criado com sucesso",
+	})
 }
 
 func GetUser(write http.ResponseWriter, request *http.Request) {
@@ -51,6 +71,23 @@ func GetUser(write http.ResponseWriter, request *http.Request) {
 
 	var db = config.ConnectDB()
 	defer db.Close()
+
+	query := `
+		SELECT id, name, email, password
+		FROM users
+		WHERE email = ?
+	`
+	_, err := db.Query(query, user.Email)
+	if err != nil {
+		http.Error(write, "Erro ao buscar usuário: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	write.WriteHeader(http.StatusAccepted)
+
+	json.NewEncoder(write).Encode(map[string]string{
+		"message": "Usuário encontrado com sucesso",
+	})
 }
 
 func UpdateUser(write http.ResponseWriter, request *http.Request) {
@@ -75,6 +112,29 @@ func UpdateUser(write http.ResponseWriter, request *http.Request) {
 	var db = config.ConnectDB()
 	defer db.Close()
 
+	query := `
+	UPDATE users
+	SET name = ?, email = ?, password = ?
+	WHERE id = ?
+	`
+	_, err = db.Exec(
+		query,
+		user.Nome,
+		user.Email,
+		user.Password,
+		user.Id,
+	)
+
+	if err != nil {
+		http.Error(write, "Erro ao atualizar usuário: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	write.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(write).Encode(map[string]string{
+		"message": "Usuário atualizado com sucesso",
+	})
 }
 
 func DeleteUser(write http.ResponseWriter, request *http.Request) {
@@ -96,4 +156,19 @@ func DeleteUser(write http.ResponseWriter, request *http.Request) {
 
 	var db = config.ConnectDB()
 	defer db.Close()
+
+	query := `
+		DELETE FROM users
+		WHERE id = ?
+	`
+	_, err := db.Exec(query, user.Id)
+	if err != nil {
+		http.Error(write, "Erro ao excluir usuário: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	write.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(write).Encode(map[string]string{
+		"message": "Usuário excluído com sucesso",
+	})
 }
