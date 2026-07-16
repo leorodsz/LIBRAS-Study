@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"libras_study/config"
 	"libras_study/models"
+	"libras_study/services"
 	"net/http"
 )
 
@@ -17,13 +18,13 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if user.Nome == "" || user.Email == "" || user.Password == "" {
-		http.Error(write, "Todos os campos são obrigatórios", http.StatusBadRequest)
+	if request.Method != http.MethodPost {
+		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if request.Method != http.MethodPost {
-		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
+	if err := services.ValidateCreateUser(&user); err != nil {
+		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -99,13 +100,13 @@ func UpdateUser(write http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if user.Id == "" || user.Nome == "" || user.Email == "" || user.Password == "" {
-		http.Error(write, "ID, nome, email e senha são obrigatórios", http.StatusBadRequest)
+	if request.Method != http.MethodPut {
+		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if request.Method != http.MethodPut {
-		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
+	if err := services.ValidateUpdateUser(&user); err != nil {
+		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
