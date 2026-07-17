@@ -11,6 +11,11 @@ import (
 func CreateUser(write http.ResponseWriter, request *http.Request) {
 	var user models.User
 
+	if request.Method != http.MethodPost {
+		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
+		return
+	}
+
 	err := json.NewDecoder(request.Body).Decode(&user)
 
 	if err != nil {
@@ -18,13 +23,18 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if request.Method != http.MethodPost {
-		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
+	if err := services.ValidateCreateUser(&user); err != nil {
+		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := services.ValidateCreateUser(&user); err != nil {
-		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
+	exists, err := services.EmailAlreadyExists(user.Email)
+	if err != nil {
+		http.Error(write, "Erro ao verificar email: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if exists {
+		http.Error(write, "Email já cadastrado", http.StatusConflict)
 		return
 	}
 
@@ -41,7 +51,6 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 		user.Email,
 		user.Password,
 	)
-
 	if err != nil {
 		http.Error(write, "Erro ao criar usuário: "+err.Error(), http.StatusInternalServerError)
 		return

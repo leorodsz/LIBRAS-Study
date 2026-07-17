@@ -1,6 +1,7 @@
 package services // Toda regra de negócio da aplicação deve ser implementada aqui
 import (
 	"fmt"
+	"libras_study/config"
 	"libras_study/models"
 	"net/mail" // lib para validação de e-mail
 )
@@ -12,6 +13,19 @@ func ValidateEmail(user *models.User) error {
 		return err
 	}
 	return nil
+}
+
+func EmailAlreadyExists(email string) (bool, error) {
+	db := config.ConnectDB()
+	defer db.Close()
+
+	query := "SELECT COUNT(*) FROM users WHERE email = ?"
+	var count int
+	err := db.QueryRow(query, email).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("Erro ao verificar duplicidade de email: %v", err)
+	}
+	return count > 0, nil
 }
 
 func ValidateRequiredFields(user *models.User) error {
@@ -34,7 +48,7 @@ func ValidatePassword(password string) error {
 }
 
 func ValidateUpdateUser(user *models.User) error {
-	if user.Id == "" && user.Nome == "" && user.Email == "" && user.Password == "" {
+	if user.Id == "" || user.Nome == "" || user.Email == "" || user.Password == "" {
 		return fmt.Errorf("ID, nome, email e senha são obrigatórios")
 	}
 	return nil
@@ -49,9 +63,6 @@ func ValidateCreateUser(user *models.User) error {
 		return err
 	}
 	if err := ValidatePassword(user.Password); err != nil {
-		return err
-	}
-	if err := ValidateUpdateUser(user); err != nil {
 		return err
 	}
 	return nil
