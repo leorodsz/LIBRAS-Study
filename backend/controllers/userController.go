@@ -92,6 +92,11 @@ func GetUser(write http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if err := services.ValidateGetUser(&user); err != nil {
+		http.Error(write, "Erro ao selecionar usuário"+err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	write.WriteHeader(http.StatusAccepted)
 
 	json.NewEncoder(write).Encode(map[string]string{

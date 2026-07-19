@@ -47,6 +47,25 @@ func ValidatePassword(password string) error {
 	return fmt.Errorf("Sua senha deve conter ao menos um caractere especial")
 }
 
+func ValidateGetUser(user *models.User) error {
+	if user.Email == "" {
+		return fmt.Errorf("Email do usuário é obrigatório")
+	}
+
+	if err := ValidateEmail(user); err != nil {
+		return fmt.Errorf("Email Inválido %v", err)
+	}
+
+	exists, err := EmailAlreadyExists(user.Email)
+	if err != nil {
+		return fmt.Errorf("Erro ao verificar email %v", err)
+	}
+	if !exists {
+		return fmt.Errorf("Usuário não encontrado")
+	}
+	return nil
+}
+
 func ValidateUpdateUser(user *models.User) error {
 	if user.Id == "" || user.Nome == "" || user.Email == "" || user.Password == "" {
 		return fmt.Errorf("ID, nome, email e senha são obrigatórios")
