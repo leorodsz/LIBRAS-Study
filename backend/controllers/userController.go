@@ -65,15 +65,14 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 func GetUser(write http.ResponseWriter, request *http.Request) {
 	var user models.User
 
-	email := request.URL.Query().Get("email")
-
-	if email == "" {
-		http.Error(write, "O campo Email é obrigatório: ", http.StatusBadRequest)
+	if request.Method != http.MethodGet {
+		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if request.Method != http.MethodGet {
-		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
+	email := request.URL.Query().Get("email")
+	if email == "" {
+		http.Error(write, "O campo Email é obrigatório: ", http.StatusBadRequest)
 		return
 	}
 
