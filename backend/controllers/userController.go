@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"libras_study/config"
 	"libras_study/models"
 	"libras_study/services"
@@ -72,11 +75,16 @@ func GetUser(write http.ResponseWriter, request *http.Request) {
 
 	email := request.URL.Query().Get("email")
 	if email == "" {
-		http.Error(write, "O campo Email é obrigatório: ", http.StatusBadRequest)
+		http.Error(write, "O campo Email é obrigatório", http.StatusBadRequest)
 		return
 	}
 
 	user.Email = email
+
+	if err := services.ValidateGetUser(&user); err != nil {
+		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	var db = config.ConnectDB()
 	defer db.Close()
@@ -86,22 +94,31 @@ func GetUser(write http.ResponseWriter, request *http.Request) {
 		FROM users
 		WHERE email = ?
 	`
-	_, err := db.Query(query, user.Email)
+
+	err := db.QueryRow(query, user.Email).Scan(
+		&user.Id,
+		&user.Nome,
+		&user.Email,
+		&user.Password,
+	)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(write, fmt.Sprintf("Usuário do Email %s não encontrado", email), http.StatusNotFound)
+			return
+		}
 		http.Error(write, "Erro ao buscar usuário: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := services.ValidateGetUser(&user); err != nil {
-		http.Error(write, "Erro ao selecionar usuário"+err.Error(), http.StatusBadRequest)
-		return
+	userResponse := models.UserResponse{
+		Id:    user.Id,
+		Nome:  user.Nome,
+		Email: user.Email,
 	}
 
-	write.WriteHeader(http.StatusAccepted)
-
-	json.NewEncoder(write).Encode(map[string]string{
-		"message": "Usuário encontrado com sucesso",
-	})
+	write.WriteHeader(http.StatusOK)
+	json.NewEncoder(write).Encode(userResponse)
 }
 
 func UpdateUser(write http.ResponseWriter, request *http.Request) {

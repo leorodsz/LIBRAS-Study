@@ -6,3 +6,10 @@ type User struct {
 	Email    string `json:"email"`
 	Password string `json:"password,omitempty"`
 }
+
+type UserResponse struct {
+	Id       string `json:"id"`
+	Nome     string `json:"nome"`
+	Email    string `json:"email"`
+	Password string `json:"password,omitempty"`
+}
