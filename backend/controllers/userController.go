@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"libras_study/config"
 	"libras_study/models"
 	"libras_study/services"
@@ -11,6 +14,11 @@ import (
 func CreateUser(write http.ResponseWriter, request *http.Request) {
 	var user models.User
 
+	if request.Method != http.MethodPost {
+		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
+		return
+	}
+
 	err := json.NewDecoder(request.Body).Decode(&user)
 
 	if err != nil {
@@ -18,13 +26,18 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if request.Method != http.MethodPost {
-		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
+	if err := services.ValidateCreateUser(&user); err != nil {
+		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := services.ValidateCreateUser(&user); err != nil {
-		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
+	exists, err := services.EmailAlreadyExists(user.Email)
+	if err != nil {
+		http.Error(write, "Erro ao verificar email: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if exists {
+		http.Error(write, "Email já cadastrado", http.StatusConflict)
 		return
 	}
 
@@ -41,7 +54,6 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 		user.Email,
 		user.Password,
 	)
-
 	if err != nil {
 		http.Error(write, "Erro ao criar usuário: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -56,19 +68,23 @@ func CreateUser(write http.ResponseWriter, request *http.Request) {
 func GetUser(write http.ResponseWriter, request *http.Request) {
 	var user models.User
 
-	email := request.URL.Query().Get("email")
-
-	if email == "" {
-		http.Error(write, "O campo Email é obrigatório: ", http.StatusBadRequest)
-		return
-	}
-
 	if request.Method != http.MethodGet {
 		http.Error(write, "Método não permitido", http.StatusMethodNotAllowed)
 		return
 	}
 
+	email := request.URL.Query().Get("email")
+	if email == "" {
+		http.Error(write, "O campo Email é obrigatório", http.StatusBadRequest)
+		return
+	}
+
 	user.Email = email
+
+	if err := services.ValidateGetUser(&user); err != nil {
+		http.Error(write, "Erro de validação: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	var db = config.ConnectDB()
 	defer db.Close()
@@ -78,17 +94,31 @@ func GetUser(write http.ResponseWriter, request *http.Request) {
 		FROM users
 		WHERE email = ?
 	`
-	_, err := db.Query(query, user.Email)
+
+	err := db.QueryRow(query, user.Email).Scan(
+		&user.Id,
+		&user.Nome,
+		&user.Email,
+		&user.Password,
+	)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(write, fmt.Sprintf("Usuário do Email %s não encontrado", email), http.StatusNotFound)
+			return
+		}
 		http.Error(write, "Erro ao buscar usuário: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	write.WriteHeader(http.StatusAccepted)
+	userResponse := models.UserResponse{
+		Id:    user.Id,
+		Nome:  user.Nome,
+		Email: user.Email,
+	}
 
-	json.NewEncoder(write).Encode(map[string]string{
-		"message": "Usuário encontrado com sucesso",
-	})
+	write.WriteHeader(http.StatusOK)
+	json.NewEncoder(write).Encode(userResponse)
 }
 
 func UpdateUser(write http.ResponseWriter, request *http.Request) {
