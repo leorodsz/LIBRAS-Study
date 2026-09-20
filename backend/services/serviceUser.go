@@ -67,8 +67,8 @@ func ValidateGetUser(user *models.User) error {
 }
 
 func ValidateUpdateUser(user *models.User) error {
-	if user.Id == "" || user.Nome == "" || user.Email == "" || user.Password == "" {
-		return fmt.Errorf("ID, nome, email e senha são obrigatórios")
+	if user.Nome == "" || user.Email == "" || user.Password == "" {
+		return fmt.Errorf("Nome, email e senha são obrigatórios")
 	}
 	return nil
 }
